@@ -1,24 +1,704 @@
+Concept explorer · HTML
+Copy
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Recursive Learning System</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepDive — Recursive Concept Explorer</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fraunces:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+  :root {
+    --bg: #f0f2f7;
+    --sidebar-bg: #ffffff;
+    --surface: #ffffff;
+    --surface2: #f7f8fc;
+    --border: #dde1ec;
+    --border-strong: #c4cad9;
+    --accent: #2a52e8;
+    --accent-light: #eef1fd;
+    --accent-hover: #1e3fc0;
+    --accent2: #e8342a;
+    --accent2-light: #fdeeed;
+    --accent3: #0ea875;
+    --accent3-light: #e6f8f2;
+    --text: #0f1423;
+    --text-secondary: #3d4560;
+    --muted: #8b93b0;
+    --tag-bg: #eef1fd;
+    --tag-hover: #dce2fa;
+    --sidebar-width: 260px;
+    --header-h: 64px;
+  }
+ 
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+ 
+  /* NAVBAR */
+  .navbar {
+    height: var(--header-h);
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+    gap: 16px;
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+ 
+  .nav-logo {
+    width: 32px; height: 32px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px; font-weight: 700;
+    font-family: 'Fraunces', serif; flex-shrink: 0;
+  }
+ 
+  .nav-title { font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: -0.01em; }
+ 
+  .nav-divider { width: 1px; height: 24px; background: var(--border); margin: 0 8px; }
+ 
+  .nav-badge {
+    font-size: 11px; font-weight: 600; color: var(--accent);
+    background: var(--accent-light); border: 1px solid #c5d0f9;
+    border-radius: 20px; padding: 2px 10px; letter-spacing: 0.04em;
+  }
+ 
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 16px; }
+ 
+  .nav-stat {
+    font-size: 12px; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .nav-stat span { color: var(--text); font-weight: 600; }
+ 
+  /* LAYOUT */
+  .layout {
+    display: flex;
+    margin-top: var(--header-h);
+    min-height: calc(100vh - var(--header-h));
+  }
+ 
+  /* SIDEBAR */
+  .sidebar {
+    width: var(--sidebar-width);
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    position: fixed;
+    top: var(--header-h); bottom: 0; left: 0;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+ 
+  .sidebar-section { padding: 20px 18px 10px; }
+ 
+  .sidebar-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+    color: var(--muted); text-transform: uppercase;
+    margin-bottom: 10px; padding: 0 4px;
+  }
+ 
+  .stat-card {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
+    display: flex; align-items: center; gap: 12px;
+  }
+ 
+  .stat-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .stat-icon.blue { background: var(--accent-light); }
+  .stat-icon.green { background: var(--accent3-light); }
+  .stat-icon.red { background: var(--accent2-light); }
+ 
+  .stat-info { flex: 1; min-width: 0; }
+  .stat-value { font-size: 20px; font-weight: 700; color: var(--text); line-height: 1; font-family: 'JetBrains Mono', monospace; }
+  .stat-name { font-size: 11px; color: var(--muted); margin-top: 2px; font-weight: 500; }
+ 
+  .sidebar-divider { height: 1px; background: var(--border); margin: 6px 18px; }
+ 
+  .trail-item {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer;
+    transition: background 0.15s; margin-bottom: 2px;
+  }
+  .trail-item:hover { background: var(--surface2); }
+  .trail-item.active { background: var(--accent-light); }
+ 
+  .trail-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border-strong); margin-top: 5px; flex-shrink: 0;
+  }
+  .trail-item.active .trail-dot { background: var(--accent); }
+ 
+  .trail-text {
+    font-size: 12.5px; color: var(--text-secondary);
+    line-height: 1.4; font-weight: 500; word-break: break-word;
+  }
+  .trail-item.active .trail-text { color: var(--accent); font-weight: 600; }
+ 
+  .trail-connector { width: 1px; height: 12px; background: var(--border); margin-left: 22px; }
+ 
+  .sidebar-footer {
+    margin-top: auto; padding: 16px 18px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+ 
+  /* MAIN */
+  .main { margin-left: var(--sidebar-width); flex: 1; }
+ 
+  .main-inner {
+    max-width: 740px; width: 100%;
+    padding: 32px 36px 80px; margin: 0 auto;
+  }
+ 
+  /* HERO */
+  .hero { padding: 16px 0 32px; }
+ 
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent-light); border: 1px solid #c5d0f9;
+    border-radius: 20px; padding: 4px 14px 4px 10px; margin-bottom: 20px;
+  }
+  .hero-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .hero-eyebrow-text { font-size: 12px; font-weight: 600; color: var(--accent); letter-spacing: 0.04em; }
+ 
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(1.9rem, 4vw, 2.7rem);
+    font-weight: 700; line-height: 1.15;
+    letter-spacing: -0.02em; color: var(--text); margin-bottom: 12px;
+  }
+  .hero h1 em { font-style: italic; color: var(--accent); }
+ 
+  .hero-sub {
+    font-size: 15px; color: var(--text-secondary);
+    line-height: 1.65; max-width: 520px; margin-bottom: 28px;
+  }
+ 
+  .steps-row {
+    display: flex; align-items: center; gap: 0;
+    flex-wrap: wrap; row-gap: 8px; margin-bottom: 32px;
+  }
+ 
+  .step-chip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; font-weight: 500; color: var(--text-secondary);
+  }
+  .step-num {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); color: #fff;
+    font-size: 10px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .step-arrow { color: var(--muted); font-size: 16px; padding: 0 8px; }
+ 
+  /* INPUT */
+  .input-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; box-shadow: 0 2px 14px rgba(0,0,0,0.07);
+    overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .input-card:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(42,82,232,0.1), 0 2px 14px rgba(0,0,0,0.07);
+  }
+ 
+  .input-top {
+    display: flex; align-items: flex-start;
+    padding: 18px 18px 12px; gap: 12px;
+  }
+ 
+  .input-icon {
+    width: 32px; height: 32px; background: var(--accent-light);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0; margin-top: 2px;
+  }
+ 
+  #query-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    font-family: 'Inter', sans-serif; font-size: 15px; color: var(--text);
+    resize: none; min-height: 48px; line-height: 1.6; font-weight: 400;
+  }
+  #query-input::placeholder { color: var(--muted); }
+ 
+  .input-bottom {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 18px 14px; border-top: 1px solid var(--border);
+    background: var(--surface2);
+  }
+ 
+  .input-hint { font-size: 12px; color: var(--muted); font-family: 'JetBrains Mono', monospace; }
+ 
+  .ask-btn {
+    background: var(--accent); border: none; border-radius: 8px;
+    padding: 9px 22px; color: #fff;
+    font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+    cursor: pointer; letter-spacing: 0.02em;
+    transition: background 0.15s, transform 0.1s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .ask-btn:hover:not(:disabled) { background: var(--accent-hover); transform: translateY(-1px); }
+  .ask-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+ 
+  .examples-row { margin-top: 20px; }
+  .examples-label {
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px;
+  }
+  .examples-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .example-pill {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 20px; padding: 6px 14px;
+    font-size: 12.5px; font-weight: 500; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .example-pill:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+ 
+  /* ANSWER */
+  .answer-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+    overflow: hidden; animation: fadeUp 0.35s ease both;
+  }
+ 
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+ 
+  .answer-card-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+  }
+  .answer-card-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent3); flex-shrink: 0; }
+  .answer-card-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; flex: 1; }
+ 
+  .answer-card-body { padding: 22px 24px; }
+ 
+  .answer-text {
+    font-family: 'Fraunces', serif;
+    font-size: 17.5px; line-height: 1.85; color: var(--text);
+  }
+ 
+  .concept-chip {
+    display: inline;
+    background: var(--accent-light); color: var(--accent);
+    border: 1px solid #b8c6f7; border-radius: 5px;
+    padding: 1px 8px 2px; cursor: pointer;
+    font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap; line-height: inherit; vertical-align: baseline;
+  }
+  .concept-chip:hover { background: var(--tag-hover); border-color: var(--accent); }
+ 
+  .concepts-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; margin-top: 14px; overflow: hidden;
+    animation: fadeUp 0.35s 0.1s ease both;
+    opacity: 0; animation-fill-mode: forwards;
+  }
+  .concepts-panel-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .concepts-panel-body { padding: 16px 20px; display: flex; flex-wrap: wrap; gap: 8px; }
+ 
+  .concept-btn {
+    background: var(--surface2); color: var(--text-secondary);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-family: 'Inter', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    transition: all 0.15s; display: flex; align-items: center; gap: 8px;
+  }
+  .concept-btn:hover {
+    background: var(--accent-light); border-color: #b8c6f7;
+    color: var(--accent); transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(42,82,232,0.1);
+  }
+  .concept-btn .arrow { font-size: 11px; opacity: 0.5; }
+ 
+  /* Loading */
+  .loading-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 14px; padding: 24px 22px;
+    display: flex; align-items: center; gap: 14px;
+    animation: fadeUp 0.3s ease both;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+ 
+  /* History */
+  .history-label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.1em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .history-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 14px 18px;
+    opacity: 0.6; transition: opacity 0.15s; cursor: pointer;
+    animation: fadeUp 0.3s ease both; margin-bottom: 10px;
+  }
+  .history-item:hover { opacity: 0.9; }
+  .history-term {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--accent); font-weight: 600; margin-bottom: 5px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .history-answer {
+    font-size: 13.5px; line-height: 1.5; color: var(--text-secondary);
+    display: -webkit-box; -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical; overflow: hidden;
+  }
+ 
+  /* Depth bar */
+  .depth-row {
+    display: flex; align-items: center;
+    gap: 5px; margin-top: 20px; margin-bottom: 4px;
+  }
+  .depth-seg {
+    height: 4px; flex: 1; background: var(--border);
+    border-radius: 2px; transition: background 0.3s; max-width: 48px;
+  }
+  .depth-seg.active { background: var(--accent); }
+  .depth-label {
+    font-size: 11px; font-family: 'JetBrains Mono', monospace;
+    color: var(--muted); margin-left: 8px; white-space: nowrap;
+  }
+ 
+  .reset-btn {
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); border-radius: 8px; padding: 6px 14px;
+    font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .reset-btn:hover { border-color: var(--accent2); color: var(--accent2); background: var(--accent2-light); }
+ 
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+</style>
 </head>
 <body>
-  <main class="container">
-    <header>
-      <h1>🧠 Recursive Learning System</h1>
-      <p class="subtitle">Ask, explore, and learn recursively</p>
-    </header>
-
-    <section class="input-section">
-      <input type="text" id="question" placeholder="Ask any question..." />
-      <button id="askBtn" onclick="getAnswer()">Ask</button>
-    </section>
-
-    <section id="answerBox" class="card hidden"></section>
-
-    <section id="historyBox" class="card hidden">
-      <h3>Exploration History</h3>
-     
+ 
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo">D</div>
+  <span class="nav-title">DeepDive</span>
+  <div class="nav-divider"></div>
+  <span class="nav-badge">BuilderThinking</span>
+  <div class="nav-right">
+    <span class="nav-stat">Questions: <span id="nav-q">0</span></span>
+    <span class="nav-stat">Concepts: <span id="nav-c">0</span></span>
+  </div>
+</nav>
+ 
+<div class="layout">
+ 
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Session Stats</div>
+      <div class="stat-card">
+        <div class="stat-icon blue">🔍</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-depth">0</div>
+          <div class="stat-name">Exploration Depth</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon green">💡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-concepts">0</div>
+          <div class="stat-name">Concepts Unlocked</div>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon red">⚡</div>
+        <div class="stat-info">
+          <div class="stat-value" id="stat-queries">0</div>
+          <div class="stat-name">Total Queries</div>
+        </div>
+      </div>
+    </div>
+ 
+    <div class="sidebar-divider"></div>
+ 
+    <div class="sidebar-section">
+      <div class="sidebar-label">Exploration Trail</div>
+      <div id="trail-list">
+        <div style="font-size:12px;color:var(--muted);padding:4px;font-style:italic;">No exploration yet</div>
+      </div>
+    </div>
+ 
+    <div class="sidebar-footer">DeepDive v1.0 · Progressive Understanding</div>
+  </aside>
+ 
+  <!-- MAIN -->
+  <main class="main">
+    <div class="main-inner">
+ 
+      <div class="hero" id="hero-section">
+        <div class="hero-eyebrow">
+          <div class="hero-eyebrow-dot"></div>
+          <span class="hero-eyebrow-text">Recursive Learning Engine</span>
+        </div>
+        <h1>Understand Anything,<br><em>Layer by Layer</em></h1>
+        <p class="hero-sub">Ask a question → Explore concepts → Keep drilling until clarity. Every answer surfaces new concepts. Every concept reveals deeper knowledge.</p>
+        <div class="steps-row">
+          <div class="step-chip"><div class="step-num">1</div>Ask a Question</div>
+          <div class="step-arrow">→</div>
+          <div class="step-chip"><div class="step-num">2</div>Get an Answer</div>
+          <div class="step-arrow">→</div>
+          <div class="step-chip"><div class="step-num">3</div>Click a Concept</div>
+          <div class="step-arrow">→</div>
+          <div class="step-chip"><div class="step-num">4</div>Go Deeper</div>
+        </div>
+      </div>
+ 
+      <div class="input-card">
+        <div class="input-top">
+          <div class="input-icon">✦</div>
+          <textarea id="query-input" rows="2" placeholder="Ask anything… e.g. What is LIME in AI?"></textarea>
+        </div>
+        <div class="input-bottom">
+          <span class="input-hint">↵ Enter to explore</span>
+          <button class="ask-btn" id="ask-btn" onclick="handleAsk()">Explore →</button>
+        </div>
+      </div>
+ 
+      <div class="examples-row" id="examples-row">
+        <div class="examples-label" style="margin-top:18px">Try these</div>
+        <div class="examples-grid">
+          <span class="example-pill" onclick="prefill('What is LIME in AI?')">What is LIME in AI?</span>
+          <span class="example-pill" onclick="prefill('How does backpropagation work?')">Backpropagation</span>
+          <span class="example-pill" onclick="prefill('What is quantum entanglement?')">Quantum Entanglement</span>
+          <span class="example-pill" onclick="prefill('Explain blockchain consensus mechanism')">Blockchain Consensus</span>
+          <span class="example-pill" onclick="prefill('What is gradient descent?')">Gradient Descent</span>
+          <span class="example-pill" onclick="prefill('How does the transformer architecture work in LLMs?')">Transformer Architecture</span>
+        </div>
+      </div>
+ 
+      <div id="loading" style="display:none;margin-top:24px;">
+        <div class="loading-card">
+          <div class="spinner"></div>
+          <div class="loading-text" id="loading-text">Thinking deeply…</div>
+        </div>
+      </div>
+ 
+      <div id="answer-area"></div>
+ 
+      <div class="depth-row" id="depth-row" style="display:none">
+        <div class="depth-seg" id="d1"></div><div class="depth-seg" id="d2"></div>
+        <div class="depth-seg" id="d3"></div><div class="depth-seg" id="d4"></div>
+        <div class="depth-seg" id="d5"></div><div class="depth-seg" id="d6"></div>
+        <div class="depth-seg" id="d7"></div><div class="depth-seg" id="d8"></div>
+        <span class="depth-label" id="depth-label">Depth 0</span>
+        <button class="reset-btn" id="reset-btn" onclick="resetAll()" style="display:none;margin-left:auto">↺ Reset</button>
+      </div>
+ 
+      <div id="history-area"></div>
+    </div>
+  </main>
+</div>
+ 
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+const MODEL = "claude-sonnet-4-20250514";
+ 
+let explorationStack = [], isLoading = false, totalConcepts = 0, totalQueries = 0;
+ 
+function prefill(text) {
+  document.getElementById('query-input').value = text;
+  handleAsk();
+}
+ 
+async function callClaude(sys, user) {
+  const res = await fetch(API_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: MODEL, max_tokens: 1000, system: sys, messages: [{ role: "user", content: user }] })
+  });
+  const data = await res.json();
+  return data.content?.map(b => b.text || "").join("") || "";
+}
+ 
+async function getAnswerAndConcepts(q) {
+  const sys = `You are a brilliant teacher. Respond ONLY with JSON (no markdown, no backticks):
+{"answer":"2-4 sentence answer using precise terminology.","concepts":["term1","term2","term3","term4","term5"]}
+Rules: 4-6 meaningful conceptual terms; avoid trivial words; pick terms a learner might not know.`;
+  const raw = await callClaude(sys, q);
+  try { return JSON.parse(raw.replace(/\`\`\`json|\`\`\`/g,"").trim()); }
+  catch(e) { return { answer: raw, concepts: [] }; }
+}
+ 
+async function handleAsk() {
+  const q = document.getElementById('query-input').value.trim();
+  if (!q || isLoading) return;
+  document.getElementById('examples-row').style.display = 'none';
+  document.getElementById('hero-section').style.display = 'none';
+  document.getElementById('history-area').innerHTML = '';
+  explorationStack = [];
+  totalQueries++; updateNavStats();
+  await exploreQuery(q, null);
+}
+ 
+async function exploreConcept(term) {
+  totalQueries++; updateNavStats();
+  await exploreQuery(`Explain the concept: "${term}" in simple but accurate terms.`, term);
+}
+ 
+async function exploreQuery(query, term) {
+  if (isLoading) return;
+  isLoading = true;
+  document.getElementById('ask-btn').disabled = true;
+  setLoading(true, term ? `Exploring "${term}"…` : "Generating answer…");
+  try {
+    const { answer, concepts } = await getAnswerAndConcepts(query);
+    totalConcepts += concepts.length; updateNavStats();
+    const entry = { term: term || query, answer, concepts };
+    if (term && explorationStack.length > 0) renderHistoryItem(explorationStack[explorationStack.length - 1]);
+    explorationStack.push(entry);
+    renderCurrent(entry);
+    updateDepthBar(); updateTrail(); updateSidebarStats();
+  } catch(e) {
+    document.getElementById('answer-area').innerHTML = `<div class="answer-card" style="margin-top:20px"><div class="answer-card-header"><div class="answer-card-dot" style="background:var(--accent2)"></div><div class="answer-card-label">Error</div></div><div class="answer-card-body"><div class="answer-text" style="color:var(--accent2)">Something went wrong. Please try again.</div></div></div>`;
+  }
+  setLoading(false); isLoading = false;
+  document.getElementById('ask-btn').disabled = false;
+}
+ 
+function renderCurrent(entry) {
+  let html = entry.answer;
+  [...entry.concepts].sort((a,b)=>b.length-a.length).forEach(c => {
+    const esc = c.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    html = html.replace(new RegExp(`\\b(${esc})\\b`,'gi'), m =>
+      `<span class="concept-chip" onclick="exploreConcept('${c.replace(/'/g,"\\'")}')">⟡ ${m}</span>`);
+  });
+  const lbl = explorationStack.length === 1 ? "Answer" : `Exploring: ${entry.term}`;
+  document.getElementById('answer-area').innerHTML = `
+    <div style="margin-top:24px">
+      <div class="answer-card">
+        <div class="answer-card-header"><div class="answer-card-dot"></div><div class="answer-card-label">${lbl}</div></div>
+        <div class="answer-card-body"><div class="answer-text">${html}</div></div>
+      </div>
+      ${entry.concepts.length ? `
+      <div class="concepts-panel">
+        <div class="concepts-panel-header">Concepts to Explore</div>
+        <div class="concepts-panel-body">
+          ${entry.concepts.map(c=>`<button class="concept-btn" onclick="exploreConcept('${c.replace(/'/g,"\\'")}')"><span>${c}</span><span class="arrow">→</span></button>`).join('')}
+        </div>
+      </div>` : ''}
+    </div>`;
+}
+ 
+function renderHistoryItem(entry) {
+  let lbl = document.getElementById('history-label-el');
+  if (!lbl) {
+    lbl = document.createElement('div');
+    lbl.id = 'history-label-el';
+    lbl.className = 'history-label';
+    lbl.textContent = 'Exploration History';
+    lbl.style.marginTop = '32px';
+    document.getElementById('history-area').prepend(lbl);
+  }
+  const div = document.createElement('div');
+  div.className = 'history-item';
+  div.innerHTML = `<div class="history-term">◎ ${entry.term}</div><div class="history-answer">${entry.answer}</div>`;
+  lbl.after(div);
+}
+ 
+function updateDepthBar() {
+  const d = explorationStack.length;
+  document.getElementById('depth-row').style.display = 'flex';
+  document.getElementById('reset-btn').style.display = 'inline-flex';
+  for(let i=1;i<=8;i++) document.getElementById(`d${i}`)?.classList.toggle('active', i<=d);
+  document.getElementById('depth-label').textContent = `Depth ${d}`;
+}
+ 
+function updateTrail() {
+  const list = document.getElementById('trail-list');
+  list.innerHTML = '';
+  explorationStack.forEach((e, i) => {
+    if(i>0){const c=document.createElement('div');c.className='trail-connector';list.appendChild(c);}
+    const item = document.createElement('div');
+    item.className = `trail-item${i===explorationStack.length-1?' active':''}`;
+    item.innerHTML = `<div class="trail-dot"></div><div class="trail-text">${i===0?'🏠 ':''}${e.term}</div>`;
+    if(i<explorationStack.length-1) item.onclick=()=>jumpTo(i);
+    list.appendChild(item);
+  });
+}
+ 
+function updateSidebarStats() {
+  document.getElementById('stat-depth').textContent = explorationStack.length;
+  document.getElementById('stat-concepts').textContent = totalConcepts;
+  document.getElementById('stat-queries').textContent = totalQueries;
+}
+ 
+function updateNavStats() {
+  document.getElementById('nav-q').textContent = totalQueries;
+  document.getElementById('nav-c').textContent = totalConcepts;
+}
+ 
+function jumpTo(index) {
+  explorationStack = explorationStack.slice(0, index+1);
+  document.getElementById('history-area').innerHTML = '';
+  for(let i=0;i<explorationStack.length-1;i++) renderHistoryItem(explorationStack[i]);
+  renderCurrent(explorationStack[explorationStack.length-1]);
+  updateDepthBar(); updateTrail(); updateSidebarStats();
+}
+ 
+function setLoading(show, msg="Thinking…") {
+  document.getElementById('loading').style.display = show ? 'block' : 'none';
+  document.getElementById('loading-text').textContent = msg;
+  if(show) document.getElementById('answer-area').innerHTML = '';
+}
+ 
+function resetAll() {
+  explorationStack=[]; totalConcepts=0; totalQueries=0;
+  document.getElementById('history-area').innerHTML='';
+  document.getElementById('answer-area').innerHTML='';
+  document.getElementById('loading').style.display='none';
+  document.getElementById('depth-row').style.display='none';
+  document.getElementById('reset-btn').style.display='none';
+  document.getElementById('hero-section').style.display='block';
+  document.getElementById('examples-row').style.display='block';
+  document.getElementById('query-input').value='';
+  document.getElementById('trail-list').innerHTML='<div style="font-size:12px;color:var(--muted);padding:4px;font-style:italic;">No exploration yet</div>';
+  updateNavStats(); updateSidebarStats();
+  for(let i=1;i<=8;i++) document.getElementById(`d${i}`)?.classList.remove('active');
+}
+ 
+document.getElementById('query-input').addEventListener('keydown', e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();handleAsk();}
+});
+</script>
+</body>
