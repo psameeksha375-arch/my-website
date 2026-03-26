@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Recursive Learning System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+        <h1>🧠 Recursive Learning System</h1>
+
+        <div class="input-section">
+            <input type="text" id="question" placeholder="Ask any question..." />
+            <button onclick="getAnswer()">Ask</button>
+        </div>
+
+        <div id="answerBox" class="card"></div>
+
+        <div id="historyBox" class="card hidden">
+            <h3>Exploration History</h3>
+            <ul id="historyList"></ul>
+        </div>
+
+        <div id="explanationBox" class="card hidden"></div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
